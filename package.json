@@ -1,0 +1,15 @@
+{
+  "name": "bansan-cup-sales",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "fetch-stores": "tsx scripts/fetch-stores.ts"
+  },
+  "devDependencies": {
+    "@types/kuromoji": "^0.1.3",
+    "@types/node": "^26.6.6",
+    "kuromoji": "^0.1.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
