@@ -35,11 +35,13 @@ export function VisitCard({
   visit,
   store,
   href,
+  onClick,
 }: {
   visit: VisitSummary;
   /** 記録一覧などで店舗名を見せるとき */
   store?: { name: string; prefecture: string; city: string };
   href?: string;
+  onClick?: () => void;
 }) {
   const staffCount = visit.staff.length;
   const excerpt = visit.note ?? [...visit.staff].sort((a, b) => a.sort_order - b.sort_order).find((s) => s.conversation)?.conversation ?? null;
@@ -73,12 +75,21 @@ export function VisitCard({
       </div>
     </>
   );
-  const className = "block overflow-hidden rounded-lg border border-border bg-card text-card-foreground";
-  return href ? (
-    <Link href={href} className={`${className} outline-none focus-visible:ring-[3px] focus-visible:ring-ring active:bg-muted/40`}>
-      {body}
-    </Link>
-  ) : (
-    <div className={className}>{body}</div>
-  );
+  const className = "block w-full overflow-hidden rounded-lg border border-border bg-card text-left text-card-foreground";
+  const interactive = "outline-none focus-visible:ring-[3px] focus-visible:ring-ring active:bg-muted/40";
+  if (href) {
+    return (
+      <Link href={href} className={`${className} ${interactive}`}>
+        {body}
+      </Link>
+    );
+  }
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} className={`${className} ${interactive}`}>
+        {body}
+      </button>
+    );
+  }
+  return <div className={className}>{body}</div>;
 }

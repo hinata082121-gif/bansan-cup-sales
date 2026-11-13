@@ -1,13 +1,30 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/page-header";
+import { Suspense } from "react";
+import { ClientOnly } from "@/components/client-only";
+import { Skeleton } from "@/components/ui/skeleton";
+import { VisitsScreen } from "@/components/visits/visits-screen";
 
 export const metadata: Metadata = { title: "記録入力" };
 
-export default function Page() {
+function VisitsSkeleton() {
   return (
-    <>
-      <PageHeader title="記録入力" />
-      <p className="px-4 text-muted-foreground">この画面はフェーズ5で作ります。</p>
-    </>
+    <div className="flex flex-col gap-3 px-4 pt-5">
+      <Skeleton className="h-8 w-32" />
+      <Skeleton className="h-4 w-56" />
+      {Array.from({ length: 4 }, (_, i) => (
+        <Skeleton key={i} className="h-28 w-full rounded-lg" />
+      ))}
+    </div>
+  );
+}
+
+/** 記録入力（営業記録の一覧と登録モーダル） */
+export default function VisitsPage() {
+  return (
+    <Suspense fallback={<VisitsSkeleton />}>
+      <ClientOnly fallback={<VisitsSkeleton />}>
+        <VisitsScreen />
+      </ClientOnly>
+    </Suspense>
   );
 }
