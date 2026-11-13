@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo } from "react";
 import { motion } from "motion/react";
 import { CalendarX2, ExternalLink, MapPin, NotebookPen, Phone, Plus, TriangleAlert } from "lucide-react";
 import { useStoreSchedules, useStoreVisits, type Store } from "@/lib/data/stores";
 import type { StoreProgress } from "@/lib/stores/hierarchy";
 import { TIME_SLOT_LABELS } from "@/lib/labels";
 import { itemVariants, listVariants } from "@/lib/motion";
+import { summarizeVisits, visitOrdinals } from "@/lib/visits/history";
 import { todayJst } from "@/hooks/use-today";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/empty-state";
 import { AuthorLabel, DateBlock, VisitCard } from "@/components/visits/visit-card";
 import { StoreBadges } from "./store-badges";
+import { VisitStatsStrip } from "./visit-stats";
 
 export function googleMapsUrl(store: Pick<Store, "name" | "address">): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`鳥貴族 ${store.name} ${store.address}`)}`;
@@ -40,12 +43,18 @@ function LoadError({ onRetry }: { onRetry: () => void }) {
   );
 }
 
-/** 店舗詳細: 基本情報・公式ページ / Google マップ・この店舗を回る予定・営業記録の履歴 */
+/** 店舗詳細: 基本情報・公式ページ / Google マップ・この店舗を回る予定・営業記録（回数の集計と履歴） */
 export function StoreDetail({ store, progress }: { store: Store; progress: StoreProgress | undefined }) {
   const today = todayJst();
   const visits = useStoreVisits(store.id);
   const schedules = useStoreSchedules(store.id, today);
   const newVisitHref = `/visits?new=1&store=${encodeURIComponent(store.id)}`;
+  const stats = useMemo(() => (visits.data ? summarizeVisits(visits.data) : null), [visits.data]);
+  // 何回目かは 2 回以上行っている店舗だけ付ける（1 件だけなら「1回目」は要らない）
+  const ordinals = useMemo(
+    () => (visits.data && visits.data.length >= 2 ? visitOrdinals(visits.data) : null),
+    [visits.data],
+  );
 
   return (
     <div className="pb-8">
@@ -137,7 +146,7 @@ export function StoreDetail({ store, progress }: { store: Store; progress: Store
         </motion.ul>
       )}
 
-      <SectionTitle count={visits.data?.length}>営業記録</SectionTitle>
+      <SectionTitle>営業記録</SectionTitle>
       {visits.isPending ? (
         <div className="mx-4 flex flex-col gap-2">
           <Skeleton className="h-28 w-full rounded-lg" />
@@ -150,13 +159,16 @@ export function StoreDetail({ store, progress }: { store: Store; progress: Store
           <EmptyState icon={NotebookPen} title="まだ営業記録がありません" description="訪問したら、上のボタンから記録をつけましょう。" />
         </div>
       ) : (
-        <motion.ul variants={listVariants} initial="hidden" animate="show" className="mx-4 flex flex-col gap-2">
-          {visits.data.map((v) => (
-            <motion.li key={v.id} variants={itemVariants}>
-              <VisitCard visit={v} href={`/visits?id=${v.id}`} />
-            </motion.li>
-          ))}
-        </motion.ul>
+        <>
+          {stats && <VisitStatsStrip stats={stats} today={today} />}
+          <motion.ul variants={listVariants} initial="hidden" animate="show" className="mx-4 flex flex-col gap-2">
+            {visits.data.map((v) => (
+              <motion.li key={v.id} variants={itemVariants}>
+                <VisitCard visit={v} ordinal={ordinals?.get(v.id)} href={`/visits?id=${v.id}`} />
+              </motion.li>
+            ))}
+          </motion.ul>
+        </>
       )}
     </div>
   );

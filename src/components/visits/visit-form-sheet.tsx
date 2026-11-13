@@ -3,9 +3,10 @@
 import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { toast } from "sonner";
-import { Store as StoreIcon, Trash2, UserPlus, X } from "lucide-react";
-import type { Store } from "@/lib/data/stores";
+import { Circle, CircleCheck, Store as StoreIcon, Trash2, UserPlus, X } from "lucide-react";
+import { useStoreProgress, type Store } from "@/lib/data/stores";
 import { useSaveVisit } from "@/lib/data/visits";
+import type { StoreProgress } from "@/lib/stores/hierarchy";
 import { PREFECTURES } from "@/lib/prefectures";
 import {
   EMPLOYMENT_TYPE_LABELS,
@@ -15,6 +16,7 @@ import {
   options,
 } from "@/lib/labels";
 import { emptyStaff, snapshot, validateVisit, type StaffInput, type VisitFormValues } from "@/lib/visits/form";
+import { formatMd } from "@/lib/format";
 import { todayJst } from "@/hooks/use-today";
 import { readLastPrefecture, rememberPrefecture } from "@/lib/last-prefecture";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
@@ -42,6 +44,13 @@ export function newVisitValues(opts: { storeId?: string | null; date?: string | 
   };
 }
 
+/** 選んだ店舗のこれまで: 「営業済 2回 · 最終 11/8」/「はじめての営業」 */
+function storeHistoryLabel(progress: StoreProgress | undefined, today: string): { visited: boolean; text: string } {
+  if (!progress?.lastVisitDate || progress.visitCount === 0) return { visited: false, text: "はじめての営業" };
+  const last = progress.lastVisitDate === today ? "今日" : formatMd(progress.lastVisitDate);
+  return { visited: true, text: `営業済 ${progress.visitCount}回 · 最終 ${last}` };
+}
+
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -63,6 +72,7 @@ export function VisitFormSheet({ open, onOpenChange, initial, visitId, stores, o
   const [storeLeftUnselected, setStoreLeftUnselected] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const saveVisit = useSaveVisit();
+  const progress = useStoreProgress();
   const staffEndRef = useRef<HTMLDivElement>(null);
   const today = todayJst();
 
@@ -74,6 +84,9 @@ export function VisitFormSheet({ open, onOpenChange, initial, visitId, stores, o
     () => (stores ?? []).filter((s) => s.prefecture === prefecture),
     [stores, prefecture],
   );
+  // 新規入力で店舗を選んだら、これまでの営業回数を見せる（再訪かどうかが分かるように）
+  const storeHistory =
+    !visitId && values.store_id && progress.data ? storeHistoryLabel(progress.data.get(values.store_id), today) : null;
 
   const errors = validateVisit(values, today);
   const dirty = snapshot(values) !== initialSnapshot;
@@ -186,6 +199,12 @@ export function VisitFormSheet({ open, onOpenChange, initial, visitId, stores, o
                   <span className="block text-xs font-medium text-brand-soft-foreground">
                     {selectedStore.prefecture} {selectedStore.city}
                   </span>
+                  {storeHistory && (
+                    <span className="mt-1 flex items-center gap-1 text-xs font-bold text-brand-soft-foreground">
+                      {storeHistory.visited ? <CircleCheck aria-hidden className="size-3.5" /> : <Circle aria-hidden className="size-3.5" />}
+                      {storeHistory.text}
+                    </span>
+                  )}
                 </span>
                 <Button
                   variant="ghost"
