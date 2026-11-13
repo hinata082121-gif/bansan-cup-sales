@@ -115,7 +115,7 @@ export function ScheduleCalendar({
                     key={day.ymd}
                     type="button"
                     onClick={() => onSelectDay(day.ymd)}
-                    aria-label={`${day.ymd.replace(/-/g, "/")}${list.length ? ` 予定${list.length}件` : ""}`}
+                    aria-label={`${Number(day.ymd.slice(5, 7))}月${day.day}日（${WEEKDAYS[day.weekday]}）${list.length ? `、予定${list.length}件` : ""}`}
                     className={cn(
                       "flex h-16 flex-col items-center gap-1 bg-card pt-1.5 outline-none focus-visible:z-10 focus-visible:ring-[3px] focus-visible:ring-ring active:bg-muted",
                       !day.inMonth && "bg-background",

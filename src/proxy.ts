@@ -4,8 +4,8 @@ import type { Database } from "@/lib/supabase/database.types";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
 import { ACCESS_COOKIE } from "@/lib/auth/access";
 
-/** 未ログインでも開けるページ（/design はデザイン確認用の見本。データは扱わない） */
-const PUBLIC_PATHS = ["/login", "/auth/callback", "/unauthorized", "/design"];
+/** 未ログインでも開けるページ */
+const PUBLIC_PATHS = ["/login", "/auth/callback", "/unauthorized"];
 /** ログイン済みなら許可リストの照合前でも開けるページ（照合・初回登録・権限なしの案内） */
 const AUTH_FLOW_PATHS = ["/auth/callback", "/auth/check", "/unauthorized", "/onboarding"];
 
@@ -55,8 +55,6 @@ export async function proxy(request: NextRequest) {
     return redirect;
   };
 
-  if (matches(pathname, ["/design"])) return response;
-
   if (!userId) {
     if (matches(pathname, PUBLIC_PATHS)) return response;
     return redirectTo("/login", pathname === "/" ? undefined : pathname + search);
@@ -77,6 +75,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // 静的ファイル・画像・PWA 関連・robots.txt には適用しない
-    "/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|manifest.webmanifest|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|manifest.webmanifest|robots.txt|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

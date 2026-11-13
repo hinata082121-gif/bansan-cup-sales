@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ClientOnly } from "@/components/client-only";
+import { ScreenFade } from "@/components/screen-fade";
 import { StoresExplorer } from "@/components/stores/stores-explorer";
 import { StoresPageSkeleton } from "@/components/stores/skeletons";
 
@@ -14,7 +15,9 @@ export default function StoresPage() {
   return (
     <Suspense fallback={<StoresPageSkeleton />}>
       <ClientOnly fallback={<StoresPageSkeleton />}>
-        <StoresExplorer />
+        <ScreenFade>
+          <StoresExplorer />
+        </ScreenFade>
       </ClientOnly>
     </Suspense>
   );

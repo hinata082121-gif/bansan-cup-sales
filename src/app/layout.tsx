@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   title: { default: APP_NAME, template: `%s | ${APP_NAME}` },
   applicationName: APP_NAME,
   description: "晩餐杯の店舗営業を記録・共有するアプリ",
+  // iPhone でホーム画面に追加したとき、アプリのように全画面で開く
+  appleWebApp: { capable: true, title: "晩餐杯", statusBarStyle: "default" },
   // 関係者だけが使うアプリなので検索エンジンには載せない
   robots: { index: false, follow: false, nocache: true, googleBot: { index: false, follow: false } },
 };

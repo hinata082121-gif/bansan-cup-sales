@@ -10,7 +10,9 @@ export default function LoginPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col">
       <div className="bg-brand px-6 pt-[calc(env(safe-area-inset-top)+4.5rem)] pb-10 text-brand-foreground">
-        <Wordmark className="text-[44px]" />
+        <h1 aria-label="晩餐杯 店舗営業">
+          <Wordmark className="text-[44px]" />
+        </h1>
         <p className="jp-phrase mt-4 text-[15px] leading-relaxed font-bold">
           鳥貴族スタッフ限定フットサル大会
           <br />
