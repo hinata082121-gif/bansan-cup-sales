@@ -19,7 +19,8 @@ const INDICATOR_SPRING = { type: "spring", stiffness: 520, damping: 38 } as cons
 /**
  * 選択肢の切り替え。選択中の印がスプリングで滑って移動する。
  *   segment : 灰色の溝の中で白い札が動く（カレンダー/リストの切り替えなど）
- *   chips   : 横並びの札。選択中はチャコールで塗る（すべて/未訪問/予定あり/営業済 の絞り込みなど）
+ *   chips   : 横並びの札。選択中はチャコールで塗る（横にスクロールできる）
+ *   tiles   : 等幅のタイル。上に名前、下に件数を得点板のように大きく出す（店舗の絞り込みなど）
  */
 export function Segmented<T extends string>({
   options,
@@ -32,12 +33,13 @@ export function Segmented<T extends string>({
   options: SegmentedOption<T>[];
   value: T;
   onChange: (value: T) => void;
-  variant?: "segment" | "chips";
+  variant?: "segment" | "chips" | "tiles";
   ariaLabel: string;
   className?: string;
 }) {
   const id = React.useId();
   const isChips = variant === "chips";
+  const isTiles = variant === "tiles";
 
   return (
     <div
@@ -46,7 +48,9 @@ export function Segmented<T extends string>({
       className={cn(
         isChips
           ? "-mx-4 flex gap-2 overflow-x-auto px-4 pb-0.5 [scrollbar-width:none]"
-          : "grid auto-cols-fr grid-flow-col gap-1 rounded-lg bg-muted p-1",
+          : isTiles
+            ? "grid auto-cols-fr grid-flow-col gap-1.5"
+            : "grid auto-cols-fr grid-flow-col gap-1 rounded-lg bg-muted p-1",
         className,
       )}
     >
@@ -74,7 +78,12 @@ export function Segmented<T extends string>({
                     "h-11 rounded-full border px-4 transition-colors",
                     selected ? "border-foreground text-background" : "border-border bg-card text-foreground",
                   )
-                : cn("h-11 rounded-md transition-colors", selected ? "text-foreground" : "text-muted-foreground"),
+                : isTiles
+                  ? cn(
+                      "h-14 min-w-0 flex-col gap-1 rounded-lg border px-1 transition-colors",
+                      selected ? "border-foreground text-background" : "border-border bg-card text-foreground",
+                    )
+                  : cn("h-11 rounded-md transition-colors", selected ? "text-foreground" : "text-muted-foreground"),
             )}
           >
             {selected && (
@@ -84,19 +93,32 @@ export function Segmented<T extends string>({
                 aria-hidden
                 className={cn(
                   "absolute inset-0",
-                  isChips ? "-m-px rounded-full bg-foreground" : "rounded-md border border-border bg-card",
+                  isChips
+                    ? "-m-px rounded-full bg-foreground"
+                    : isTiles
+                      ? "-m-px rounded-lg bg-foreground"
+                      : "rounded-md border border-border bg-card",
                 )}
               />
             )}
-            <span className="relative z-10 flex items-center gap-1.5">
-              {Icon && <Icon aria-hidden className="size-4" />}
-              {option.label}
-              {option.count !== undefined && (
-                <span className={cn("num text-[15px] font-semibold", selected ? "opacity-90" : "text-muted-foreground")}>
-                  {option.count}
+            {isTiles ? (
+              <span className="relative z-10 flex flex-col items-center gap-1">
+                <span className="text-xs leading-none font-bold">{option.label}</span>
+                <span className={cn("num text-[22px] leading-none font-bold", !selected && option.count === 0 && "text-muted-foreground")}>
+                  {option.count ?? "–"}
                 </span>
-              )}
-            </span>
+              </span>
+            ) : (
+              <span className="relative z-10 flex items-center gap-1.5">
+                {Icon && <Icon aria-hidden className="size-4" />}
+                {option.label}
+                {option.count !== undefined && (
+                  <span className={cn("num text-[15px] font-semibold", selected ? "opacity-90" : "text-muted-foreground")}>
+                    {option.count}
+                  </span>
+                )}
+              </span>
+            )}
           </motion.button>
         );
       })}

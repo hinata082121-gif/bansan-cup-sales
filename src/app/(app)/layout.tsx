@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { LogOut } from "lucide-react";
 import { AppHeader } from "@/components/app-header";
-import { BottomNav } from "@/components/bottom-nav";
+import { BottomNav, BottomNavView } from "@/components/bottom-nav";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { userColorVar } from "@/lib/user-color";
@@ -22,7 +22,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </form>
       </AppHeader>
       <main className="flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))]">{children}</main>
-      <BottomNav />
+      {/* 店舗一覧の URL（/stores/東京都/…）は事前描画では決まらないので、タブは Suspense の内側で URL を読む */}
+      <Suspense fallback={<BottomNavView />}>
+        <BottomNav />
+      </Suspense>
     </div>
   );
 }
