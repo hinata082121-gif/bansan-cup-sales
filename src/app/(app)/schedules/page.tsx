@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ClientOnly } from "@/components/client-only";
+import { ScreenFade } from "@/components/screen-fade";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SchedulesScreen } from "@/components/schedules/schedules-screen";
 
@@ -22,7 +23,9 @@ export default function SchedulesPage() {
   return (
     <Suspense fallback={<SchedulesSkeleton />}>
       <ClientOnly fallback={<SchedulesSkeleton />}>
-        <SchedulesScreen />
+        <ScreenFade>
+          <SchedulesScreen />
+        </ScreenFade>
       </ClientOnly>
     </Suspense>
   );

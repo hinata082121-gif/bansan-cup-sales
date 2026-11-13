@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ClientOnly } from "@/components/client-only";
+import { ScreenFade } from "@/components/screen-fade";
 import { Skeleton } from "@/components/ui/skeleton";
 import { VisitsScreen } from "@/components/visits/visits-screen";
 
@@ -23,7 +24,9 @@ export default function VisitsPage() {
   return (
     <Suspense fallback={<VisitsSkeleton />}>
       <ClientOnly fallback={<VisitsSkeleton />}>
-        <VisitsScreen />
+        <ScreenFade>
+          <VisitsScreen />
+        </ScreenFade>
       </ClientOnly>
     </Suspense>
   );
