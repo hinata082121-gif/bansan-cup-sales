@@ -16,6 +16,7 @@ import {
 } from "@/lib/labels";
 import { emptyStaff, snapshot, validateVisit, type StaffInput, type VisitFormValues } from "@/lib/visits/form";
 import { todayJst } from "@/hooks/use-today";
+import { readLastPrefecture, rememberPrefecture } from "@/lib/last-prefecture";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -25,23 +26,7 @@ import { SaveButton, type SaveState } from "@/components/ui/save-button";
 import { Textarea } from "@/components/ui/textarea";
 import { StoreAutocomplete } from "@/components/stores/store-autocomplete";
 
-const LAST_PREFECTURE_KEY = "bansan-cup-sales:last-prefecture";
 const COLLAPSE = { type: "spring", stiffness: 420, damping: 40 } as const;
-
-export function readLastPrefecture(): string {
-  try {
-    return localStorage.getItem(LAST_PREFECTURE_KEY) ?? "";
-  } catch {
-    return "";
-  }
-}
-function rememberPrefecture(prefecture: string) {
-  try {
-    localStorage.setItem(LAST_PREFECTURE_KEY, prefecture);
-  } catch {
-    // 保存できなくても困らない
-  }
-}
 
 /** 新規入力の初期値。訪問日は今日、都道府県は前回選んだもの */
 export function newVisitValues(opts: { storeId?: string | null; date?: string | null } = {}): VisitFormValues {

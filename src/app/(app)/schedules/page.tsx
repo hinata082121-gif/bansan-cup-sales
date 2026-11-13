@@ -1,13 +1,29 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/page-header";
+import { Suspense } from "react";
+import { ClientOnly } from "@/components/client-only";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SchedulesScreen } from "@/components/schedules/schedules-screen";
 
 export const metadata: Metadata = { title: "営業予定" };
 
-export default function Page() {
+function SchedulesSkeleton() {
   return (
-    <>
-      <PageHeader title="営業予定" />
-      <p className="px-4 text-muted-foreground">この画面はフェーズ6で作ります。</p>
-    </>
+    <div className="flex flex-col gap-3 px-4 pt-5">
+      <Skeleton className="h-8 w-32" />
+      <Skeleton className="h-4 w-64" />
+      <Skeleton className="h-12 w-full" />
+      <Skeleton className="h-80 w-full rounded-lg" />
+    </div>
+  );
+}
+
+/** 営業予定（カレンダー / リスト） */
+export default function SchedulesPage() {
+  return (
+    <Suspense fallback={<SchedulesSkeleton />}>
+      <ClientOnly fallback={<SchedulesSkeleton />}>
+        <SchedulesScreen />
+      </ClientOnly>
+    </Suspense>
   );
 }
