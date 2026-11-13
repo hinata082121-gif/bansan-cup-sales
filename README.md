@@ -132,6 +132,9 @@ npm run dev
 | `npm run lint` / `npm run typecheck` | ESLint / 型チェック |
 | `npm run test:db` | マイグレーションと RLS のテスト（PGlite 上で実行。Supabase は不要） |
 
+`/design` は色・文字・部品をまとめたデザインの見本ページです（データを扱わないのでログイン不要）。
+部品は `src/components/ui/`、色・角丸・書体のトークンは `src/app/globals.css` にあります。
+
 ### 認証の仕組み（メモ）
 
 - `src/proxy.ts`（Next.js 16 で `middleware.ts` から改名された仕組み）が全ページの前で動き、未ログインならログイン画面へ回す
