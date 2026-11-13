@@ -34,12 +34,15 @@ export function AuthorLabel({ author }: { author: VisitSummary["author"] }) {
 export function VisitCard({
   visit,
   store,
+  ordinal,
   href,
   onClick,
 }: {
   visit: VisitSummary;
   /** 記録一覧などで店舗名を見せるとき */
   store?: { name: string; prefecture: string; city: string };
+  /** 店舗詳細の履歴で、その店舗への何回目の営業かを見せるとき */
+  ordinal?: number;
   href?: string;
   onClick?: () => void;
 }) {
@@ -59,6 +62,11 @@ export function VisitCard({
             </>
           )}
           <div className={store ? "mt-2 flex flex-wrap gap-1.5" : "flex flex-wrap gap-1.5"}>
+            {ordinal !== undefined && (
+              <Badge variant="solid">
+                <span className="num text-[13px]">{ordinal}</span>回目
+              </Badge>
+            )}
             {visit.flyer_status && (
               <Badge variant={FLYER_VARIANT[visit.flyer_status]}>チラシ {FLYER_STATUS_LABELS[visit.flyer_status]}</Badge>
             )}

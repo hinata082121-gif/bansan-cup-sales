@@ -256,13 +256,13 @@ function BadgeSection() {
     <Section no="04" title="バッジ" note="ピル型のタグとアイコン。色だけでなく文字でも状態が分かる。">
       <SubLabel>店舗の進捗</SubLabel>
       <div className="flex flex-wrap gap-2">
-        <StatusBadge status="visited" date="2026-11-08" />
+        <StatusBadge status="visited" date="2026-11-08" count={1} />
         <StatusBadge status="scheduled" date="2026-11-20" />
         <StatusBadge status="unvisited" />
       </div>
-      <SubLabel>再訪予定（営業済と予定ありが同時に付く）</SubLabel>
+      <SubLabel>再訪（営業回数と最終訪問日。予定ありが同時に付くこともある）</SubLabel>
       <div className="flex flex-wrap gap-2">
-        <StatusBadge status="visited" date="2026-11-08" />
+        <StatusBadge status="visited" date="2026-11-08" count={3} />
         <StatusBadge status="scheduled" date="2026-11-27" />
       </div>
       <SubLabel>記録の属性</SubLabel>
@@ -341,7 +341,7 @@ function CardSection() {
 
       <SubLabel>店舗（第3階層）</SubLabel>
       <Card className="divide-y divide-border overflow-hidden">
-        <StoreRow name="池袋東口店" address="豊島区東池袋1丁目" badges={[<StatusBadge key="v" status="visited" date="2026-11-08" />, <StatusBadge key="s" status="scheduled" date="2026-11-27" />]} />
+        <StoreRow name="池袋東口店" address="豊島区東池袋1丁目" badges={[<StatusBadge key="v" status="visited" date="2026-11-08" count={2} />, <StatusBadge key="s" status="scheduled" date="2026-11-27" />]} />
         <StoreRow name="池袋サンシャイン通り店" address="豊島区東池袋1丁目" badges={[<StatusBadge key="s" status="scheduled" date="2026-11-20" />]} />
         <StoreRow name="池袋メトロポリタン口店" address="豊島区西池袋1丁目" badges={[<StatusBadge key="u" status="unvisited" />]} />
       </Card>
