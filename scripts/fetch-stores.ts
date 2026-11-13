@@ -6,10 +6,13 @@
  *   npm run stores:upsert           # 取得せず、コミット済みの data/stores.json を Supabase へ upsert
  *   npm run fetch-stores            # 取得して data/stores.json を書き出すだけ
  *   npm run fetch-stores -- --dry   # 取得と差分表示のみ（ファイルは書き換えない）
+ *   npm run fetch-stores -- --no-fetch
+ *                                   # 取得せず、data/stores.json から supabase/seed.sql だけ作り直す
  *   npm run fetch-stores -- --input saved.json
  *                                   # API を呼ばず、保存済みの API レスポンスから生成する
  *
  * Supabase への投入には .env.local の NEXT_PUBLIC_SUPABASE_URL と SUPABASE_SECRET_KEY を使う。
+ * data/stores.json を書き出すたびに、SQL Editor に貼り付けて投入できる supabase/seed.sql も作る。
  *
  * Node 22 の fetch は HTTPS_PROXY を読まないので、プロキシ環境では
  * NODE_USE_ENV_PROXY=1 を付けて実行する。
@@ -298,6 +301,56 @@ async function buildStores(
 // Supabase への投入
 // ---------------------------------------------------------------------------
 
+const SEED_PATH = path.join(ROOT, "supabase/seed.sql");
+
+const STORE_COLUMNS = [
+  "id", "name", "name_kana", "prefecture", "city", "address", "zip_code", "tel",
+  "lat", "lng", "official_url", "opening_note",
+] as const satisfies readonly (keyof Store)[];
+
+function sqlLiteral(v: string | number | null): string {
+  if (v === null) return "null";
+  if (typeof v === "number") return String(v);
+  return `'${v.replace(/'/g, "''")}'`;
+}
+
+/**
+ * Supabase の SQL Editor に貼り付けて実行できる投入用 SQL（supabase/seed.sql）を書き出す。
+ * ターミナルを使わずに店舗を投入したいとき用。ローカルの `supabase db reset` でも使われる。
+ */
+async function writeSeedSql(stores: Store[]) {
+  const values = stores
+    .map((s) => `  (${STORE_COLUMNS.map((c) => sqlLiteral(s[c])).join(", ")})`)
+    .join(",\n");
+  const updates = STORE_COLUMNS.filter((c) => c !== "id")
+    .map((c) => `  ${c} = excluded.${c}`)
+    .join(",\n");
+  const sql = `-- 店舗マスタの投入（${stores.length} 店舗）
+-- scripts/fetch-stores.ts が data/stores.json から生成するファイル。手で編集しない。
+-- Supabase の SQL Editor に全文を貼り付けて Run すれば投入・更新できる（何度実行してもよい）。
+
+begin;
+
+insert into public.stores (${STORE_COLUMNS.join(", ")})
+values
+${values}
+on conflict (id) do update set
+${updates},
+  is_active = true,
+  updated_at = now();
+
+-- 一覧から消えた店舗（閉店など）は削除せず非表示にする
+update public.stores
+set is_active = false, updated_at = now()
+where is_active
+  and id not in (${stores.map((s) => sqlLiteral(s.id)).join(", ")});
+
+commit;
+`;
+  await writeFile(SEED_PATH, sql, "utf8");
+  console.log(`${path.relative(ROOT, SEED_PATH)} を書き出しました`);
+}
+
 /**
  * stores テーブルへ upsert する。今回の一覧に無い店舗（閉店など）は削除せず
  * is_active = false にする（過去の営業記録が参照しているため）。
@@ -362,6 +415,7 @@ async function main() {
   if (noFetch) {
     if (previous.length === 0) throw new Error("data/stores.json がありません。先に npm run fetch-stores を実行してください");
     console.log(`data/stores.json の ${previous.length} 件を使います（取得はしません）`);
+    await writeSeedSql(previous);
     if (upsert) await upsertStores(previous);
     return;
   }
@@ -402,6 +456,7 @@ async function main() {
   }
   await writeFile(OUT_PATH, JSON.stringify(file, null, 2) + "\n", "utf8");
   console.log(`\n${path.relative(ROOT, OUT_PATH)} を書き出しました`);
+  await writeSeedSql(stores);
 
   if (upsert) await upsertStores(stores);
 }

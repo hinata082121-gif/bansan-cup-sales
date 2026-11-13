@@ -25,7 +25,9 @@
 1. <https://supabase.com/dashboard> で **New project** を作成する
    - Region は **Northeast Asia (Tokyo)** を推奨（Vercel の関数も東京 `hnd1` で動かす設定にしてある）
 2. マイグレーション（テーブル・RLS・関数）を適用する。どちらかの方法で:
-   - **CLI**（推奨）
+   - **SQL Editor**（ターミナル不要）: `supabase/migrations/` の SQL ファイルを古い順に開き、
+     全文をコピーして SQL Editor に貼り付け、**Run** する
+   - **CLI**
      ```bash
      npx supabase login
      ```
@@ -35,7 +37,6 @@
      ```bash
      npx supabase db push
      ```
-   - **SQL Editor**: `supabase/migrations/` の SQL ファイルを古い順に開き、中身を貼り付けて実行する
 3. 接続情報を控える
    - **Project URL**: Project Settings → Data API（または画面上部の **Connect**）
    - **Publishable key**（`sb_publishable_...`）と **Secret key**（`sb_secret_...`）: Project Settings → API Keys
@@ -72,23 +73,15 @@
 
 ## 3. 店舗データの投入
 
-`data/stores.json`（コミット済み）を Supabase の `stores` テーブルに投入します。
+`data/stores.json`（コミット済み）を Supabase の `stores` テーブルに投入します。どちらかの方法で:
 
-```bash
-cp .env.example .env.local
-```
-
-`.env.local` に `NEXT_PUBLIC_SUPABASE_URL`・`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`・`SUPABASE_SECRET_KEY` を書いてから:
-
-```bash
-npm install
-```
-
-```bash
-npm run stores:upsert
-```
-
-公式サイトから取り直して投入まで一度に行う場合は `npm run stores:sync`（[店舗データの取得と更新](#店舗データの取得と更新)を参照）。
+- **SQL Editor**（ターミナル不要）: `supabase/seed.sql` の全文をコピーして SQL Editor に貼り付け、**Run** する。
+  何度実行しても問題ありません（店舗データを更新したときも同じ手順）
+- **コマンド**: `.env.local` に `NEXT_PUBLIC_SUPABASE_URL`・`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`・`SUPABASE_SECRET_KEY` を書いてから
+  ```bash
+  npm run stores:upsert
+  ```
+  公式サイトから取り直して投入まで一度に行う場合は `npm run stores:sync`（[店舗データの取得と更新](#店舗データの取得と更新)を参照）
 
 > `SUPABASE_SECRET_KEY` は RLS を無視して書き込める強い権限のキーです。`.env.local` 以外には書かず、Vercel にも設定しないでください。
 
@@ -156,7 +149,7 @@ npm run dev
 |---|---|
 | `npm run stores:sync` | 取得 → `data/stores.json` 書き出し → Supabase へ投入（新店・閉店の反映はこれ 1 つ） |
 | `npm run stores:upsert` | 取得せず、コミット済みの `data/stores.json` を Supabase へ投入 |
-| `npm run fetch-stores` | 取得して `data/stores.json` を書き出すだけ（`-- --dry` で差分表示のみ） |
+| `npm run fetch-stores` | 取得して `data/stores.json` と `supabase/seed.sql` を書き出すだけ（`-- --dry` で差分表示のみ） |
 
 - 取得元: <https://map.torikizoku.co.jp/map/> が内部で呼んでいる店舗検索 API
   （`https://api.site.can-ly.com/v2/directories/74/shops/search`）。日本全体を覆う範囲を指定して
@@ -166,7 +159,8 @@ npm run dev
 - 店舗 ID には公式の店舗コード（公式ページ URL `https://map.torikizoku.co.jp/detail/{店舗コード}/` の番号）を使います
 - 市区町村は公式マップのエリア区分と同じく、政令指定都市（さいたま市・千葉市・横浜市・川崎市・相模原市）は区に分けず市でまとめます
 - 開店前の店舗は `opening_note`（例: `2026年12月16日オープン予定`）付きで含めます
-- 更新したら `data/stores.json` をコミットしてください
+- `data/stores.json` を書き出すと、SQL Editor 用の `supabase/seed.sql` も作り直します
+- 更新したら `data/stores.json` と `supabase/seed.sql` をコミットしてください
 
 ### ふりがな（`name_kana`）
 

@@ -7,34 +7,8 @@
  */
 import { after, before, describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { readdir, readFile } from "node:fs/promises";
-import path from "node:path";
-import { PGlite } from "@electric-sql/pglite";
-
-const MIGRATIONS_DIR = path.resolve(import.meta.dirname, "../migrations");
-
-/** Supabase 環境の最小限の再現 */
-const SUPABASE_STUB = `
-  create role anon nologin;
-  create role authenticated nologin;
-  create role service_role nologin bypassrls;
-
-  create schema auth;
-  create table auth.users (
-    id uuid primary key,
-    email text,
-    email_confirmed_at timestamptz
-  );
-  create function auth.uid() returns uuid language sql stable as $$
-    select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
-  $$;
-
-  grant usage on schema auth to anon, authenticated, service_role;
-  grant execute on function auth.uid() to anon, authenticated, service_role;
-  grant usage on schema public to anon, authenticated, service_role;
-  -- Supabase の既定: public に作られたテーブルは各ロールに全権限が付く
-  alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
-`;
+import type { PGlite } from "@electric-sql/pglite";
+import { createTestDb } from "./setup";
 
 const USERS = {
   alice: "00000000-0000-0000-0000-00000000000a", // 許可済み
@@ -81,10 +55,7 @@ const addDays = (date: string, days: number) => {
 };
 
 before(async () => {
-  db = new PGlite();
-  await db.exec(SUPABASE_STUB);
-  const files = (await readdir(MIGRATIONS_DIR)).filter((f) => f.endsWith(".sql")).sort();
-  for (const f of files) await db.exec(await readFile(path.join(MIGRATIONS_DIR, f), "utf8"));
+  db = await createTestDb();
 
   await db.exec(`
     insert into auth.users (id, email, email_confirmed_at) values
