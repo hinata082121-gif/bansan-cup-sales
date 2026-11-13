@@ -1,10 +1,15 @@
 /**
- * 鳥貴族 公式店舗マップから 1都3県の店舗を取得し、data/stores.json を生成する。
+ * 鳥貴族 公式店舗マップから 1都3県の店舗を取得し、data/stores.json を生成して
+ * Supabase の stores テーブルへ投入する。
  *
- *   npm run fetch-stores            # 取得して data/stores.json を書き出す
+ *   npm run stores:sync             # 取得 → data/stores.json 書き出し → Supabase へ upsert
+ *   npm run stores:upsert           # 取得せず、コミット済みの data/stores.json を Supabase へ upsert
+ *   npm run fetch-stores            # 取得して data/stores.json を書き出すだけ
  *   npm run fetch-stores -- --dry   # 取得と差分表示のみ（ファイルは書き換えない）
  *   npm run fetch-stores -- --input saved.json
  *                                   # API を呼ばず、保存済みの API レスポンスから生成する
+ *
+ * Supabase への投入には .env.local の NEXT_PUBLIC_SUPABASE_URL と SUPABASE_SECRET_KEY を使う。
  *
  * Node 22 の fetch は HTTPS_PROXY を読まないので、プロキシ環境では
  * NODE_USE_ENV_PROXY=1 を付けて実行する。
@@ -20,6 +25,7 @@ import { createRequire } from "node:module";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import kuromoji from "kuromoji";
+import { createClient } from "@supabase/supabase-js";
 
 const API_URL =
   "https://api.site.can-ly.com/v2/directories/74/shops/search" +
@@ -288,13 +294,78 @@ async function buildStores(
   return { stores, warnings };
 }
 
+// ---------------------------------------------------------------------------
+// Supabase への投入
+// ---------------------------------------------------------------------------
+
+/**
+ * stores テーブルへ upsert する。今回の一覧に無い店舗（閉店など）は削除せず
+ * is_active = false にする（過去の営業記録が参照しているため）。
+ */
+async function upsertStores(stores: Store[]) {
+  try {
+    process.loadEnvFile(path.join(ROOT, ".env.local"));
+  } catch {
+    // .env.local が無ければ環境変数をそのまま使う
+  }
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const secretKey = process.env.SUPABASE_SECRET_KEY;
+  if (!url || !secretKey) {
+    throw new Error(
+      "Supabase に投入するには NEXT_PUBLIC_SUPABASE_URL と SUPABASE_SECRET_KEY が必要です（.env.local に設定してください）",
+    );
+  }
+  const supabase = createClient(url, secretKey, { auth: { persistSession: false } });
+  const now = new Date().toISOString();
+
+  const rows = stores.map((s) => ({ ...s, is_active: true, updated_at: now }));
+  const { error } = await supabase.from("stores").upsert(rows, { onConflict: "id" });
+  if (error) throw new Error(`stores への upsert に失敗しました: ${error.message}`);
+
+  const { data: active, error: selectError } = await supabase
+    .from("stores")
+    .select("id, name")
+    .eq("is_active", true);
+  if (selectError) throw new Error(`stores の取得に失敗しました: ${selectError.message}`);
+
+  const ids = new Set(stores.map((s) => s.id));
+  const gone = (active ?? []).filter((s) => !ids.has(s.id));
+  if (gone.length > 0) {
+    const { error } = await supabase
+      .from("stores")
+      .update({ is_active: false, updated_at: now })
+      .in(
+        "id",
+        gone.map((s) => s.id),
+      );
+    if (error) throw new Error(`閉店店舗の更新に失敗しました: ${error.message}`);
+  }
+
+  console.log(`\nSupabase の stores に ${rows.length} 件を upsert しました`);
+  for (const s of gone) console.log(`  一覧から外れたため非表示にした店舗: ${s.name}（${s.id}）`);
+}
+
+// ---------------------------------------------------------------------------
+// メイン
+// ---------------------------------------------------------------------------
+
 async function main() {
   const args = process.argv.slice(2);
   const dry = args.includes("--dry");
+  const upsert = args.includes("--upsert");
+  const noFetch = args.includes("--no-fetch");
   const inputIdx = args.indexOf("--input");
   const inputPath = inputIdx >= 0 ? path.resolve(args[inputIdx + 1] ?? "") : null;
 
   const previous = await loadPrevious();
+
+  if (noFetch) {
+    if (previous.length === 0) throw new Error("data/stores.json がありません。先に npm run fetch-stores を実行してください");
+    console.log(`data/stores.json の ${previous.length} 件を使います（取得はしません）`);
+    if (upsert) await upsertStores(previous);
+    return;
+  }
+
   const { stores, warnings } = await buildStores(inputPath);
 
   const counts = Object.fromEntries(
@@ -326,11 +397,13 @@ async function main() {
   }
 
   if (dry) {
-    console.log("\n--dry のためファイルは書き換えていません");
+    console.log("\n--dry のためファイルの書き換えと投入はしていません");
     return;
   }
   await writeFile(OUT_PATH, JSON.stringify(file, null, 2) + "\n", "utf8");
   console.log(`\n${path.relative(ROOT, OUT_PATH)} を書き出しました`);
+
+  if (upsert) await upsertStores(stores);
 }
 
 main().catch((e) => {
