@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { userColorVar } from "@/lib/user-color";
 import { useTodayJst } from "@/hooks/use-today";
 import { AppHeader } from "@/components/app-header";
-import { BottomNav } from "@/components/bottom-nav";
+import { BottomNavView } from "@/components/bottom-nav";
 import { EmptyState } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
@@ -465,7 +465,7 @@ function ToggleSection() {
       </div>
       <SubLabel>絞り込み（店舗一覧の上部）</SubLabel>
       <Segmented
-        variant="chips"
+        variant="tiles"
         ariaLabel="絞り込み"
         value={filter}
         onChange={setFilter}
@@ -745,7 +745,7 @@ export function DesignShowcase() {
         <SheetSection />
         <p className="px-4 pb-8 text-center text-xs text-muted-foreground">下のタブは押すと選択中の札が滑ります（このページでは画面は切り替わりません）</p>
       </main>
-      <BottomNav demo={{ active: tab, onSelect: setTab }} />
+      <BottomNavView activeHref={tab} demo={{ onSelect: setTab }} />
     </div>
   );
 }

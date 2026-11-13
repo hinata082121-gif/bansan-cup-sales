@@ -15,14 +15,25 @@ export const NAV_TABS: { href: string; label: string; icon: LucideIcon }[] = [
 
 const INDICATOR_SPRING = { type: "spring", stiffness: 480, damping: 36 } as const;
 
+/** 現在の URL から選択中のタブを決める（URL を読むので Suspense の内側で使う） */
+export function BottomNav() {
+  const pathname = usePathname();
+  const activeHref = NAV_TABS.find((t) => pathname === t.href || pathname.startsWith(`${t.href}/`))?.href;
+  return <BottomNavView activeHref={activeHref} />;
+}
+
 /**
  * 画面下部の固定タブ。選択中の黄色い札がタブ間を滑って移動する。
  * demo を渡すと、ページ遷移せずにその場で切り替わる（見本ページ用）。
+ * activeHref が無い状態は、事前描画（URL が決まる前）の仮表示に使う。
  */
-export function BottomNav({ demo }: { demo?: { active: string; onSelect: (href: string) => void } }) {
-  const pathname = usePathname();
-  const activeHref = demo?.active ?? NAV_TABS.find((t) => pathname === t.href || pathname.startsWith(`${t.href}/`))?.href;
-
+export function BottomNavView({
+  activeHref,
+  demo,
+}: {
+  activeHref?: string;
+  demo?: { onSelect: (href: string) => void };
+}) {
   return (
     <nav
       aria-label="メイン"
