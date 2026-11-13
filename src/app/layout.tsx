@@ -1,4 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { cn } from "@/lib/utils";
+import { Providers } from "@/components/providers";
+import { barlowCondensed, delaGothic, zenKaku } from "./fonts";
 import "./globals.css";
 
 const APP_NAME = "晩餐杯 店舗営業";
@@ -16,15 +19,20 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f7c600" },
-    { media: "(prefers-color-scheme: dark)", color: "#1c1916" },
+    { media: "(prefers-color-scheme: light)", color: "#ffc629" },
+    { media: "(prefers-color-scheme: dark)", color: "#1b1815" },
   ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ja" className="h-full antialiased">
-      <body className="min-h-full font-sans">{children}</body>
+    <html
+      lang="ja"
+      className={cn("h-full antialiased", zenKaku.variable, delaGothic.variable, barlowCondensed.variable)}
+    >
+      <body className="min-h-full font-sans">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

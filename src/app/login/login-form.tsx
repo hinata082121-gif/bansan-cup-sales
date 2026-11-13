@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { LogIn, TriangleAlert } from "lucide-react";
+import { LoaderCircle, LogIn, TriangleAlert } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
 
 const ERROR_MESSAGES: Record<string, string> = {
   auth: "ログインに失敗しました。もう一度お試しください。",
@@ -13,9 +14,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 export function LoginForm() {
   const searchParams = useSearchParams();
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(
-    ERROR_MESSAGES[searchParams.get("error") ?? ""] ?? null,
-  );
+  const [error, setError] = useState<string | null>(ERROR_MESSAGES[searchParams.get("error") ?? ""] ?? null);
 
   async function signIn() {
     setPending(true);
@@ -41,20 +40,15 @@ export function LoginForm() {
   return (
     <>
       {error && (
-        <p role="alert" className="flex items-start gap-2 rounded-md bg-primary/10 px-3 py-2.5 text-sm text-primary">
+        <p role="alert" className="flex items-start gap-2 rounded-md bg-primary-soft px-3 py-2.5 text-sm font-bold text-primary-soft-foreground">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
           {error}
         </p>
       )}
-      <button
-        type="button"
-        onClick={signIn}
-        disabled={pending}
-        className="flex h-12 items-center justify-center gap-2 rounded-md bg-primary px-4 text-base font-bold text-primary-foreground transition active:scale-[0.97] disabled:opacity-60"
-      >
-        <LogIn className="size-5" aria-hidden />
+      <Button size="lg" block onClick={signIn} disabled={pending}>
+        {pending ? <LoaderCircle className="animate-spin" aria-hidden /> : <LogIn aria-hidden />}
         {pending ? "Google に移動しています…" : "Google でログイン"}
-      </button>
+      </Button>
     </>
   );
 }

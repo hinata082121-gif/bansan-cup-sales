@@ -1,47 +1,277 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-/* 色の暫定トークン（フェーズ3で shadcn/ui のテーマトークンとして整える） */
-:root {
-  --background: #fbf8f1;
-  --foreground: #2b2622;
-  --muted: #f1ece1;
-  --muted-foreground: #6b625a;
-  --border: #e3dccd;
-  --brand: #f7c600;
-  --brand-foreground: #2b2622;
-  --primary: #d7261e;
-  --primary-foreground: #ffffff;
+/*
+ * ダークモード: 端末の設定に従う。<html data-theme="light|dark"> で上書きできる（見本ページの切り替え用）。
+ * 色はすべて下のトークン経由で指定するので、コンポーネント側で dark: を書く必要は基本的にない。
+ */
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
 }
 
+/* =============================================================================
+ * カラートークン（ライト）
+ *   黄 brand   : ヘッダー・選択中タブ・ハイライトなど「面」で使う
+ *   赤 primary : 保存・記録するなどの主要ボタン、重要な状態など「点」で使う
+ *   背景       : 真っ白ではない温かいオフホワイト / 文字: 温かいチャコール
+ *   コントラストは本文 4.5:1 以上（WCAG AA）、入力欄の枠線は 3:1 以上
+ * ========================================================================== */
+:root {
+  --background: #faf6ee;
+  --foreground: #2a2420;
+
+  --card: #fffdf9;
+  --card-foreground: #2a2420;
+  --popover: #fffdf9;
+  --popover-foreground: #2a2420;
+
+  --muted: #f1ebdf;
+  --muted-foreground: #6b6157;
+  --border: #e3dacb;
+  --input: #978873;
+  --ring: #2a2420;
+
+  /* 黄（ブランド） */
+  --brand: #ffc629;
+  --brand-foreground: #2a2420;
+  --brand-soft: #fff0bf;
+  --brand-soft-foreground: #6a4b00;
+
+  /* 赤（アクセント） */
+  --primary: #d2281c;
+  --primary-foreground: #ffffff;
+  --primary-soft: #fbe3df;
+  --primary-soft-foreground: #a81e14;
+
+  --secondary: #f1ebdf;
+  --secondary-foreground: #2a2420;
+  --accent: #f1ebdf;
+  --accent-foreground: #2a2420;
+  --destructive: #c0251a;
+
+  /* 状態（営業済） */
+  --success: #2e7d4a;
+  --success-soft: #e2f0e4;
+  --success-soft-foreground: #1e5a31;
+  --success-strong: #2e7d4a; /* 白文字を乗せる面（保存成功のボタンなど） */
+
+  /* トースト（チャコールの面に明るい文字） */
+  --toast: #2a2420;
+  --toast-foreground: #faf6ee;
+
+  /* ユーザーごとの色（営業予定のドットなど）。profiles.color の c1〜c10 に対応 */
+  --user-c1: #e4572e;
+  --user-c2: #13998e;
+  --user-c3: #2f6fde;
+  --user-c4: #4c9a2a;
+  --user-c5: #e8900c;
+  --user-c6: #d94f8c;
+  --user-c7: #8c5a3c;
+  --user-c8: #2b3a67;
+  --user-c9: #8f8419;
+  --user-c10: #1d9bc4;
+
+  --radius: 0.5rem;
+}
+
+/* =============================================================================
+ * カラートークン（ダーク）: 黄・赤は彩度を落として眩しくしない
+ * ========================================================================== */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #1c1916;
-    --foreground: #eee8de;
-    --muted: #2a2622;
-    --muted-foreground: #a89f94;
-    --border: #3a342e;
-    --brand: #d9b21e;
-    --brand-foreground: #1c1916;
-    --primary: #c93a31;
+  :root:not([data-theme="light"]) {
+    --background: #1b1815;
+    --foreground: #efe8dc;
+    --card: #24201c;
+    --card-foreground: #efe8dc;
+    --popover: #24201c;
+    --popover-foreground: #efe8dc;
+    --muted: #2c2723;
+    --muted-foreground: #a99f92;
+    --border: #38312b;
+    --input: #7a6e62;
+    --ring: #efe8dc;
+    --brand: #e0b43a;
+    --brand-foreground: #1b1815;
+    --brand-soft: #3a311e;
+    --brand-soft-foreground: #f2d27a;
+    --primary: #bf3a2f;
     --primary-foreground: #ffffff;
+    --primary-soft: #3d221e;
+    --primary-soft-foreground: #f4a097;
+    --secondary: #2c2723;
+    --secondary-foreground: #efe8dc;
+    --accent: #2c2723;
+    --accent-foreground: #efe8dc;
+    --destructive: #e0675c;
+    --success: #5fae78;
+    --success-soft: #1e3326;
+    --success-soft-foreground: #93d3a6;
+    --success-strong: #2a6e43;
+    --toast: #efe8dc;
+    --toast-foreground: #1b1815;
+    --user-c1: #f0805f;
+    --user-c2: #3cc2b5;
+    --user-c3: #6b9bf0;
+    --user-c4: #7cc25a;
+    --user-c5: #f2ad45;
+    --user-c6: #ec80b0;
+    --user-c7: #c08a68;
+    --user-c8: #8b9ad1;
+    --user-c9: #c4b84a;
+    --user-c10: #5cc3e6;
   }
+}
+
+:root[data-theme="dark"] {
+  --background: #1b1815;
+  --foreground: #efe8dc;
+  --card: #24201c;
+  --card-foreground: #efe8dc;
+  --popover: #24201c;
+  --popover-foreground: #efe8dc;
+  --muted: #2c2723;
+  --muted-foreground: #a99f92;
+  --border: #38312b;
+  --input: #7a6e62;
+  --ring: #efe8dc;
+  --brand: #e0b43a;
+  --brand-foreground: #1b1815;
+  --brand-soft: #3a311e;
+  --brand-soft-foreground: #f2d27a;
+  --primary: #bf3a2f;
+  --primary-foreground: #ffffff;
+  --primary-soft: #3d221e;
+  --primary-soft-foreground: #f4a097;
+  --secondary: #2c2723;
+  --secondary-foreground: #efe8dc;
+  --accent: #2c2723;
+  --accent-foreground: #efe8dc;
+  --destructive: #e0675c;
+  --success: #5fae78;
+  --success-soft: #1e3326;
+  --success-soft-foreground: #93d3a6;
+  --success-strong: #2a6e43;
+  --toast: #efe8dc;
+  --toast-foreground: #1b1815;
+  --user-c1: #f0805f;
+  --user-c2: #3cc2b5;
+  --user-c3: #6b9bf0;
+  --user-c4: #7cc25a;
+  --user-c5: #f2ad45;
+  --user-c6: #ec80b0;
+  --user-c7: #c08a68;
+  --user-c8: #8b9ad1;
+  --user-c9: #c4b84a;
+  --user-c10: #5cc3e6;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-soft-foreground: var(--brand-soft-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
-  --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif;
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-soft-foreground: var(--primary-soft-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-soft-foreground: var(--success-soft-foreground);
+  --color-toast: var(--toast);
+  --color-toast-foreground: var(--toast-foreground);
+  --color-user-c1: var(--user-c1);
+  --color-user-c2: var(--user-c2);
+  --color-user-c3: var(--user-c3);
+  --color-user-c4: var(--user-c4);
+  --color-user-c5: var(--user-c5);
+  --color-user-c6: var(--user-c6);
+  --color-user-c7: var(--user-c7);
+  --color-user-c8: var(--user-c8);
+  --color-user-c9: var(--user-c9);
+  --color-user-c10: var(--user-c10);
+
+  /* 文字: 本文 Zen Kaku Gothic New / 見出し・ワードマーク Dela Gothic One / 数字 Barlow Condensed */
+  --font-sans: var(--font-zen-kaku), "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+  --font-heading: var(--font-dela-gothic), var(--font-zen-kaku), "Hiragino Sans", sans-serif;
+  --font-num: var(--font-barlow-condensed), var(--font-zen-kaku), "Hiragino Sans", sans-serif;
+
+  /* 角丸は控えめに（4〜8px） */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  --radius-2xl: 8px;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  -webkit-tap-highlight-color: transparent;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
+    font-feature-settings: "palt" 1;
+  }
+  /* iOS で入力時に勝手にズームしないよう、入力欄は常に 16px 以上 */
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+@layer utilities {
+  /* 短い日本語の文を文節の切れ目で折り返す（「つけましょ／う。」のような泣き別れを防ぐ） */
+  .jp-phrase {
+    word-break: auto-phrase;
+    text-wrap: balance;
+  }
+
+  /* 日付・件数などの数字: 得点板のような細身の太字で、桁をそろえる */
+  .num {
+    font-family: var(--font-num);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: 0.01em;
+  }
+}
+
+/* 動きを減らす設定の端末では CSS のアニメーション・トランジションも控えめに（Motion は MotionConfig で制御） */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
