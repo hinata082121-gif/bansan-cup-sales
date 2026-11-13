@@ -45,7 +45,9 @@ export function SaveButton({
       aria-live="polite"
       disabled={state !== "idle" || props.disabled}
       className={cn(
-        "overflow-hidden disabled:opacity-100",
+        "overflow-hidden",
+        // 保存中・成功の表示中は押せないが、薄くはしない（入力不足で押せないときだけ薄くする）
+        state !== "idle" && "disabled:opacity-100",
         state === "success" && "bg-[var(--success-strong)] text-white",
         state === "saving" && "opacity-80",
         className,
